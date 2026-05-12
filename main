@@ -1,0 +1,32 @@
+import anthropic
+import smtplib
+from email.mime.text import MIMEText
+from datetime import date
+
+client = anthropic.Anthropic(api_key="YOUR_ANTHROPIC_API_KEY")
+
+def get_briefing():
+    response = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=1000,
+        tools=[{"type": "web_search_20250305", "name": "web_search"}],
+        messages=[{
+            "role": "user",
+            "content": f"Give me a concise daily briefing on the latest political developments in Bosnia and Herzegovina as of {date.today()}. Focus on key events, Dodik, OHR, EU accession, and any energy/geopolitical developments. Keep it to 300 words max."
+        }]
+    )
+    # Extract text from response
+    return next(b.text for b in response.content if b.type == "text")
+
+def send_email(body):
+    msg = MIMEText(body)
+    msg["Subject"] = f"🇧🇦 Bosnia Briefing — {date.today()}"
+    msg["From"] = "you@gmail.com"
+    msg["To"] = "your-iphone@icloud.com"  # iCloud email → goes to iPhone Mail app
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login("you@gmail.com", "YOUR_APP_PASSWORD")
+        server.send_message(msg)
+
+briefing = get_briefing()
+send_email(briefing)
